@@ -6,7 +6,7 @@
 
  The interface is available in English, Italian, Arabic, Farsi, selectable from a menu at the top of the app window.
 
- **To be visualized correctly in Gephi, you need to have the necessessary fonts of your target language installed on your system.**
+ **To be visualized correctly in Gephi, you need to have the necessary fonts for your target language installed on your system.**
 
  [![Download Windows](https://img.shields.io/badge/Download-Windows-blue?logo=windows)](https://github.com/CLLFNC/gephi-RTL-preshaper/releases/download/v1.0.0/GephiRTLReshaper-windows.zip)
 [![Download macOS](https://img.shields.io/badge/Download-macOS-lightgrey?logo=apple)](https://github.com/CLLFNC/gephi-RTL-preshaper/releases/download/v1.0.0/GephiRTLReshaper-macos.zip)
