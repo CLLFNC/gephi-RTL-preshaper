@@ -2,9 +2,11 @@
 
  A GUI application to prepare Arabic, Persian (or other RTL script) labels before importing them into Gephi, which does not natively support right-to-left rendering.
 
- Given a CSV with a text column (e.g. nodes or edges), the tool creates a new column called **Label** containing the reshaped and correctly reordered text, **ready to be used as a label in Gephi**.
+ Given a CSV with a text column (e.g. nodes or edges), the tool creates a new column called **Label** containing the reshaped and correctly reordered text, **ready to be used as a label in Gephi** during import.
 
  The interface is available in English, Italian, Arabic, Farsi, selectable from a menu at the top of the app window.
+
+ **To be visualized correctly in Gephi, you need to have the necessessary fonts of your target language installed on your system.**
 
  [![Download Windows](https://img.shields.io/badge/Download-Windows-blue?logo=windows)](https://github.com/CLLFNC/gephi-RTL-preshaper/releases/download/v1.0.0/GephiRTLReshaper-windows.zip)
 [![Download macOS](https://img.shields.io/badge/Download-macOS-lightgrey?logo=apple)](https://github.com/CLLFNC/gephi-RTL-preshaper/releases/download/v1.0.0/GephiRTLReshaper-macos.zip)
