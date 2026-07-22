@@ -1,5 +1,0 @@
-packages = [
-    "pandas",
-    "arabic-reshaper",
-    "python-bidi"
-]
