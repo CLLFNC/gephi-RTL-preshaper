@@ -6,6 +6,10 @@
 
  The interface is available in English, Italian, Arabic, Farsi, selectable from a menu at the top of the app window.
 
+ [![Download Windows](https://img.shields.io/badge/Download-Windows-blue?logo=windows)](https://github.com/CLLFNC/gephi-RTL-preshaper/releases/download/v1.0.0/GephiRTLReshaper-windows.zip)
+[![Download macOS](https://img.shields.io/badge/Download-macOS-lightgrey?logo=apple)](https://github.com/CLLFNC/gephi-RTL-preshaper/releases/download/v1.0.0/GephiRTLReshaper-macos.zip)
+[![Download Linux](https://img.shields.io/badge/Download-Linux-orange?logo=linux)](https://github.com/CLLFNC/gephi-RTL-preshaper/releases/download/v1.0.0/GephiRTLReshaper-linux.zip)
+
 ## How to use it:
 
 - Browse... → select the CSV with nodes or edges
