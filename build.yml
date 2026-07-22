@@ -1,0 +1,62 @@
+name: Build Gephi RTL Reshaper
+
+# Run manually from the "Actions" tab, or automatically whenever the
+# script itself changes on the main branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "gephi_rtl_reshaper.py"
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            artifact_name: GephiRTLReshaper-windows
+            build_path: dist/GephiRTLReshaper.exe
+          - os: ubuntu-latest
+            artifact_name: GephiRTLReshaper-linux
+            build_path: dist/GephiRTLReshaper
+          - os: macos-latest
+            artifact_name: GephiRTLReshaper-macos
+            build_path: dist/GephiRTLReshaper.app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Ubuntu's Python does not ship tkinter by default; install it.
+      - name: Install system Tk (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      - name: Install Python dependencies
+        run: pip install pandas arabic_reshaper python-bidi pyinstaller
+
+      - name: Build executable
+        run: >
+          pyinstaller --onefile --windowed --name "GephiRTLReshaper"
+          gephi_rtl_reshaper.py
+
+      - name: Make Linux binary executable
+        if: runner.os == 'Linux'
+        run: chmod +x dist/GephiRTLReshaper
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.build_path }}
+          if-no-files-found: error
