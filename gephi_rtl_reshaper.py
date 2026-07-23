@@ -1,21 +1,6 @@
 #!/usr/bin/env python3
-"""
-Gephi RTL Reshaper
-------------------
-GUI application to prepare Arabic/Persian (or other RTL script) labels
-before importing them into Gephi, which does not natively support RTL
-rendering.
 
-The user selects ONE text column (e.g. "Name"); the app creates a new
-column called "Label" containing the reshaped and visually reordered
-text for correct display in Gephi.
-
-Supports Italian, English, Arabic, and Farsi interface languages via the
-selector at the top of the window. Default language: English.
-
-Usage: double-click the executable (or "python gephi_rtl_reshaper.py").
-"""
-
+import csv
 import os
 import traceback
 import tkinter as tk
@@ -42,6 +27,34 @@ def reshape_value(text):
     return get_display(reshaped)
 
 
+def detect_separator(path, default=","):
+    """
+    Try to sniff the field delimiter of a CSV/TSV file.
+    Falls back to `default` if detection fails.
+    """
+    candidates = [",", ";", "\t", "|"]
+    try:
+        with open(path, "r", encoding="utf-8-sig", errors="replace") as f:
+            sample = f.read(8192)
+        if not sample.strip():
+            return default
+        dialect = csv.Sniffer().sniff(sample, delimiters="".join(candidates))
+        return dialect.delimiter
+    except Exception:
+        # Fallback heuristic: pick whichever candidate delimiter appears
+        # most often in the first line.
+        try:
+            with open(path, "r", encoding="utf-8-sig", errors="replace") as f:
+                first_line = f.readline()
+            counts = {c: first_line.count(c) for c in candidates}
+            best = max(counts, key=counts.get)
+            if counts[best] > 0:
+                return best
+        except Exception:
+            pass
+        return default
+
+
 # ---------------------------------------------------------------------------
 # Translations
 # ---------------------------------------------------------------------------
@@ -62,7 +75,7 @@ TEXTS = {
         "placeholder": "Load a CSV file to see the available columns.",
         "step3_frame": "3. Generate the file for Gephi",
         "process_button": "Process and save",
-        "status_loaded": "Loaded {n} rows, {m} columns.",
+        "status_loaded": "Loaded {n} rows, {m} columns (separator detected: '{sep}').",
         "status_done": "Done! File saved to: {path}",
         "dialog_open_title": "Select the CSV with nodes or edges",
         "filetype_csv": "CSV files",
@@ -89,6 +102,14 @@ TEXTS = {
             "The 'Label' column was added (from '{col}').\n\n"
             "Use this column as Label in Gephi."
         ),
+        "sep_label": "Separator:",
+        "sep_auto": "Auto-detect",
+        "sep_names": {
+            ",": "Comma ( , )",
+            ";": "Semicolon ( ; )",
+            "\t": "Tab",
+            "|": "Pipe ( | )",
+        },
     },
     "it": {
         "window_title": "Gephi RTL Reshaper",
@@ -99,7 +120,7 @@ TEXTS = {
         "placeholder": "Carica un file CSV per vedere le colonne disponibili.",
         "step3_frame": "3. Genera il file per Gephi",
         "process_button": "Elabora e salva",
-        "status_loaded": "Caricate {n} righe, {m} colonne.",
+        "status_loaded": "Caricate {n} righe, {m} colonne (separatore rilevato: '{sep}').",
         "status_done": "Fatto! File salvato in: {path}",
         "dialog_open_title": "Seleziona il CSV con i nodi o gli archi",
         "filetype_csv": "File CSV",
@@ -126,6 +147,14 @@ TEXTS = {
             "È stata aggiunta la colonna 'Label' (da '{col}').\n\n"
             "Usa questa colonna come Label in Gephi."
         ),
+        "sep_label": "Separatore:",
+        "sep_auto": "Rilevamento automatico",
+        "sep_names": {
+            ",": "Virgola ( , )",
+            ";": "Punto e virgola ( ; )",
+            "\t": "Tabulazione",
+            "|": "Barra verticale ( | )",
+        },
     },
     "ar": {
         "window_title": "Gephi RTL Reshaper",
@@ -136,7 +165,7 @@ TEXTS = {
         "placeholder": "قم بتحميل ملف CSV لعرض الأعمدة المتاحة.",
         "step3_frame": "٣. إنشاء الملف الخاص بـ Gephi",
         "process_button": "معالجة وحفظ",
-        "status_loaded": "تم تحميل {n} صف و {m} عمود.",
+        "status_loaded": "تم تحميل {n} صف و {m} عمود (الفاصل المكتشف: '{sep}').",
         "status_done": "تم! تم حفظ الملف في: {path}",
         "dialog_open_title": "اختر ملف CSV الخاص بالعقد أو الروابط",
         "filetype_csv": "ملفات CSV",
@@ -163,6 +192,14 @@ TEXTS = {
             ".('{col}' تمت إضافة العمود 'Label' (من\n\n"
             ".استخدم هذا العمود كـ Label في Gephi"
         ),
+        "sep_label": ":الفاصل",
+        "sep_auto": "اكتشاف تلقائي",
+        "sep_names": {
+            ",": "فاصلة ( , )",
+            ";": "فاصلة منقوطة ( ; )",
+            "\t": "علامة تبويب",
+            "|": "خط عمودي ( | )",
+        },
     },
     "fa": {
         "window_title": "Gephi RTL Reshaper",
@@ -173,7 +210,7 @@ TEXTS = {
         "placeholder": "برای مشاهده ستون‌های موجود، یک فایل CSV بارگذاری کنید.",
         "step3_frame": "۳. ساخت فایل برای Gephi",
         "process_button": "پردازش و ذخیره",
-        "status_loaded": "{n} ردیف و {m} ستون بارگذاری شد.",
+        "status_loaded": "{n} ردیف و {m} ستون بارگذاری شد (جداکننده شناسایی‌شده: '{sep}').",
         "status_done": ":انجام شد! فایل ذخیره شد در\n{path}",
         "dialog_open_title": "فایل CSV گره‌ها یا یال‌ها را انتخاب کنید",
         "filetype_csv": "فایل‌های CSV",
@@ -200,10 +237,21 @@ TEXTS = {
             ".(ستون 'Label' اضافه شد (از '{col}'\n\n"
             ".از این ستون به‌عنوان Label در Gephi استفاده کنید"
         ),
+        "sep_label": ":جداکننده",
+        "sep_auto": "تشخیص خودکار",
+        "sep_names": {
+            ",": "کاما ( , )",
+            ";": "نقطه‌ویرگول ( ; )",
+            "\t": "تب",
+            "|": "خط عمودی ( | )",
+        },
     },
 }
 
 DEFAULT_LANG = "en"
+
+# Order in which separators are listed in the combobox (language-independent).
+SEP_ORDER = [",", ";", "\t", "|"]
 
 
 class ReshaperApp(tk.Tk):
@@ -212,12 +260,14 @@ class ReshaperApp(tk.Tk):
 
         self.current_lang = DEFAULT_LANG
 
-        self.geometry("560x520")
+        self.geometry("560x560")
         self.resizable(False, False)
 
         self.input_path = tk.StringVar()
         self.df = None
         self.selected_column = tk.StringVar(value="")  # single-column selection
+        self.detected_sep = ","  # separator actually used to read/write the file
+        self.sep_choice = tk.StringVar(value="")  # what's shown in the sep combobox
 
         self._build_ui()
         self._apply_language()
@@ -255,7 +305,20 @@ class ReshaperApp(tk.Tk):
         entry.pack(side="left", fill="x", expand=True, padx=(8, 4), pady=8)
 
         self.browse_btn = ttk.Button(self.frame1, text="", command=self.browse_file)
-        self.browse_btn.pack(side="left", padx=(0, 8), pady=8)
+        self.browse_btn.pack(side="left", padx=(0, 4), pady=8)
+
+        # Separator selector (auto-detected, but user can override it)
+        sep_frame = ttk.Frame(self.frame1)
+        sep_frame.pack(side="left", padx=(4, 8), pady=8)
+
+        self.sep_label_widget = ttk.Label(sep_frame, text="")
+        self.sep_label_widget.pack(side="left", padx=(0, 4))
+
+        self.sep_combo = ttk.Combobox(
+            sep_frame, state="readonly", width=16,
+        )
+        self.sep_combo.pack(side="left")
+        self.sep_combo.bind("<<ComboboxSelected>>", self._on_sep_change)
 
         # --- Step 2: column selection ---
         self.frame2 = ttk.LabelFrame(self, text="")
@@ -298,6 +361,13 @@ class ReshaperApp(tk.Tk):
 
         self.frame1.config(text=t["step1_frame"])
         self.browse_btn.config(text=t["browse_button"])
+        self.sep_label_widget.config(text=t["sep_label"])
+
+        # Rebuild the separator combobox entries in the new language,
+        # keeping whichever separator is currently in effect selected.
+        sep_names = t["sep_names"]
+        self.sep_combo.config(values=[sep_names[s] for s in SEP_ORDER])
+        self.sep_combo.set(sep_names.get(self.detected_sep, sep_names[","]))
 
         self.frame2.config(text=t["step2_frame"])
         self.frame3.config(text=t["step3_frame"])
@@ -306,6 +376,43 @@ class ReshaperApp(tk.Tk):
         # Only show the placeholder text if no columns are currently listed
         if self.df is None:
             self.placeholder_label.config(text=t["placeholder"])
+
+    # -- Separator handling ---------------------------------------------------
+
+    def _set_sep_combo(self, sep):
+        """Reflect the given separator in the combobox display."""
+        self.detected_sep = sep
+        sep_names = TEXTS[self.current_lang]["sep_names"]
+        self.sep_combo.set(sep_names.get(sep, sep))
+
+    def _on_sep_change(self, event=None):
+        """User manually overrode the separator: re-read the file with it."""
+        display = self.sep_combo.get()
+        sep_names = TEXTS[self.current_lang]["sep_names"]
+        for s in SEP_ORDER:
+            if sep_names[s] == display:
+                self.detected_sep = s
+                break
+        self._reload_current_file()
+
+    def _reload_current_file(self):
+        path = self.input_path.get()
+        if not path:
+            return
+        t = TEXTS[self.current_lang]
+        try:
+            df = pd.read_csv(path, sep=self.detected_sep, engine="python")
+        except Exception as e:
+            messagebox.showerror(t["err_read_title"], t["err_read_msg"].format(e=e))
+            return
+        self.df = df
+        self._populate_columns(df.columns.tolist())
+        self.status_var.set(
+            t["status_loaded"].format(n=len(df), m=len(df.columns), sep=self._sep_repr())
+        )
+
+    def _sep_repr(self):
+        return "TAB" if self.detected_sep == "\t" else self.detected_sep
 
     # -- Core logic ----------------------------------------------------------
 
@@ -318,16 +425,21 @@ class ReshaperApp(tk.Tk):
         if not path:
             return
 
+        sep = detect_separator(path)
+
         try:
-            df = pd.read_csv(path)
+            df = pd.read_csv(path, sep=sep, engine="python")
         except Exception as e:
             messagebox.showerror(t["err_read_title"], t["err_read_msg"].format(e=e))
             return
 
         self.input_path.set(path)
         self.df = df
+        self._set_sep_combo(sep)
         self._populate_columns(df.columns.tolist())
-        self.status_var.set(t["status_loaded"].format(n=len(df), m=len(df.columns)))
+        self.status_var.set(
+            t["status_loaded"].format(n=len(df), m=len(df.columns), sep=self._sep_repr())
+        )
 
     def _populate_columns(self, columns):
         for widget in self.columns_frame.winfo_children():
@@ -378,7 +490,10 @@ class ReshaperApp(tk.Tk):
             base, ext = os.path.splitext(in_path)
             out_path = f"{base}_reshaped.csv"
 
-            df_out.to_csv(out_path, index=False)
+            # Write back out using the same separator the file was read with,
+            # so the output stays consistent with whatever tool produced the
+            # original CSV (Excel/regional settings, Gephi export, etc.).
+            df_out.to_csv(out_path, index=False, sep=self.detected_sep)
 
         except Exception as e:
             messagebox.showerror(
