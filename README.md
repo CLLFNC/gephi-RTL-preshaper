@@ -2,7 +2,7 @@
 
  A GUI application to prepare Arabic, Persian (or other RTL script) labels before importing them into Gephi, which does not natively support right-to-left rendering.
 
- Given a CSV with a text column (e.g. nodes or edges), the tool creates a new column called **Label** containing the reshaped and reordered text, **which will be unreadable bu the human eye, but ready to be used as a label in Gephi** during import.
+ Given a CSV with a text column (e.g. nodes or edges), the tool creates a new column called **Label** containing the reshaped and reordered text, **which will be unreadable by the human eye, but ready to be used as a label in Gephi** during import.
  
  The interface is available in English, Italian, Arabic, Farsi, selectable from a menu at the top of the app window.
 
