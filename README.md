@@ -17,7 +17,7 @@
 - Browse... → select the CSV with nodes or edges
 - Select the column to convert (e.g. "Name")
 - Process and save
-- A filename_gephi.csv file is generated in the same folder as the original file, **with all the original columns plus the new Label column**
+- A filename_reshaped.csv file is generated in the same folder as the original file, **with all the original columns plus the new Label column**
 - In Gephi, import that CSV and use Label as the label field for nodes or edges
 
 ## Installation
